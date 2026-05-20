@@ -27,7 +27,7 @@ def get_client():
         username=username,
         password=password,
         app_key=app_key,
-        certs=(cert_path, key_path),
+        cert_files=(cert_path, key_path),
     )
     client.login()
     return client
