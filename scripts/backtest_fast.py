@@ -11,6 +11,8 @@ sys.path.insert(0, os.path.abspath('.'))
 
 from src.bradley_terry import build_ratings, match_win_probability
 from src.name_utils import add_sackmann_names
+from src.h2h_model import h2h_adjusted_probability
+from src.form_model import form_adjusted_probability, form_adjusted_probability_no_clay
 from src.value_engine import calculate_edge, kelly_stake
 from config.config import config
 
@@ -75,7 +77,7 @@ def run_fast_backtest(odds_df: pd.DataFrame,
     results = []
     skipped = 0
 
-    for _, match in odds_df.iterrows():
+    for idx, match in odds_df.iterrows():
         month   = match["Date"].to_period("M")
         surface = str(match.get("Surface", "hard")).lower()
         if surface not in surfaces:
@@ -112,6 +114,17 @@ def run_fast_backtest(odds_df: pd.DataFrame,
         else:
             p_a = p_overall
 
+        # H2H adjustment
+        ref_date = match["Date"] if pd.notna(match["Date"]) else None
+        p_a = h2h_adjusted_probability(
+            player_a, player_b, p_a, match_df, surface,
+            reference_date=ref_date
+        )
+        # Form adjustment
+        p_a = form_adjusted_probability_no_clay(
+            player_a, player_b, p_a, match_df, surface,
+            reference_date=ref_date
+        )
         p_b = 1 - p_a
 
         # Get odds
