@@ -21,7 +21,8 @@ from config.config import config
 
 # tennis-data.co.uk URLs
 # Format: http://www.tennis-data.co.uk/YYYY/TOUR.xls
-TENNIS_DATA_BASE = "http://www.tennis-data.co.uk/{year}/{tour}.xlsx"
+TENNIS_DATA_BASE_ATP = "http://www.tennis-data.co.uk/{year}/{year}.xlsx"
+TENNIS_DATA_BASE_WTA = "http://www.tennis-data.co.uk/{year}w/{year}.xlsx"
 
 TOURS = {
     "ATP": "atp",
@@ -62,7 +63,8 @@ SACKMANN_COLS = [
 
 def download_tennis_data(tour: str, year: int, out_path: str) -> str:
     """Download tennis-data.co.uk odds file for a given tour and year."""
-    url   = TENNIS_DATA_BASE.format(year=year, tour=TOURS[tour])
+    base  = TENNIS_DATA_BASE_ATP if tour == "ATP" else TENNIS_DATA_BASE_WTA
+    url   = base.format(year=year)
     fname = f"{tour.lower()}_{year}_odds.xlsx"
     fpath = os.path.join(out_path, fname)
 
