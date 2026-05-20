@@ -22,7 +22,8 @@ config = {
     # -------------------------------------------------------------------------
     # VALUE FILTER
     # -------------------------------------------------------------------------
-    "min_edge_pct":                   1.5,   # Slightly higher than football
+    "min_edge_pct":                   1.5,   # Minimum edge
+    "max_edge_pct":                   3.0,   # Cap -- above this model is overconfident
     "odds_drift_threshold":           0.15,
     "min_odds":                       1.40,  # Don't back odds-on shots
     "max_odds":                       8.00,  # Don't back big outsiders

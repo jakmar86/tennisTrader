@@ -85,18 +85,23 @@ def build_ratings(df: pd.DataFrame, surface: str = None,
 
     min_matches = config["min_matches_required"]
 
-    # Bradley-Terry log-likelihood optimisation
+    # Bradley-Terry log-likelihood optimisation (vectorised)
+    winners = np.array([player_idx[w] for w in df["winner_name"]])
+    losers  = np.array([player_idx[l] for l in df["loser_name"]])
+    weights = df["weight"].values
+
     def neg_log_likelihood(params):
-        """Negative log-likelihood of observed match outcomes."""
-        nll = 0.0
-        for _, row in df.iterrows():
-            wi = player_idx[row["winner_name"]]
-            li = player_idx[row["loser_name"]]
-            w  = row["weight"]
-            # Log-likelihood: log(exp(p_w) / (exp(p_w) + exp(p_l)))
-            diff = params[wi] - params[li]
-            nll -= w * (diff - np.log1p(np.exp(diff)))
+        diff = params[winners] - params[losers]
+        nll  = -np.sum(weights * (diff - np.logaddexp(0, diff)))
         return nll
+
+    def grad(params):
+        diff  = params[winners] - params[losers]
+        probs = 1.0 / (1.0 + np.exp(-diff))
+        g     = np.zeros(n)
+        np.add.at(g, winners, -weights * (1 - probs))
+        np.add.at(g, losers,   weights * (1 - probs))
+        return g
 
     # Initialise with zeros, fix first player to 0 for identifiability
     x0      = np.zeros(n)
@@ -106,6 +111,7 @@ def build_ratings(df: pd.DataFrame, surface: str = None,
     result = minimize(
         neg_log_likelihood,
         x0,
+        jac=grad,
         method="L-BFGS-B",
         bounds=bounds,
         options={"maxiter": 1000},
